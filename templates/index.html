@@ -2,10 +2,75 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Hello World App</title>
+    <title>Test Walls</title>
+    <style>
+      body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",sans-serif; padding:2rem;}
+      header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;}
+      .muted{opacity:.7;font-size:.9rem;}
+      table{border-collapse:collapse; width:100%;}
+      th,td{border:1px solid #ddd; padding:.5rem; text-align:left;}
+      th{background:#fafafa;}
+      .available{color:#0a7; font-weight:600;}
+      .reserved{color:#b00; font-weight:600;}
+      form.inline{display:inline;}
+      input[type="time"]{font:inherit; padding:.2rem .3rem;}
+      button{font:inherit; padding:.3rem .6rem; border:1px solid #ccc; border-radius:6px; background:#fff; cursor:pointer;}
+    </style>
 </head>
 <body>
-    <h1>Hello, World!</h1>
-    <p>The current time is: {{ time }}</p>
+  <header>
+    <div><strong>Test Walls</strong></div>
+    <div class="muted">
+      Signed in as <strong>{{ user }}</strong> &nbsp;•&nbsp; <a href="/logout">Log out</a>
+    </div>
+  </header>
+
+  <p class="muted">Server time: {{ time }}</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Resource</th>
+        <th>Status</th>
+        <th>Reserved by</th>
+        <th>Expires at</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in resources %}
+      <tr>
+        <td>{{ r.name }}</td>
+        <td>
+          {% if r.reserved_by %}
+            <span class="reserved">Reserved</span>
+          {% else %}
+            <span class="available">Available</span>
+          {% endif %}
+        </td>
+        <td>{{ r.reserved_by or '-' }}</td>
+        <td>{{ r.expires_at or '-' }}</td>
+        <td>
+          {% if not r.reserved_by %}
+            <form class="inline" method="post" action="/reserve">
+              <input type="hidden" name="resource_id" value="{{ r.id }}">
+              <label class="muted" for="t-{{ r.id }}">Time (HH:MM):</label>
+              <input id="t-{{ r.id }}" type="time" name="expires_hhmm" step="60">
+              <button type="submit">Reserve</button>
+            </form>
+          {% elif r.reserved_by == user %}
+            <form class="inline" method="post" action="/release">
+              <input type="hidden" name="resource_id" value="{{ r.id }}">
+              <button type="submit">Release</button>
+            </form>
+          {% else %}
+            <span class="muted">Owned by {{ r.reserved_by }}</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
 </body>
 </html>

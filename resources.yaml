@@ -1,0 +1,7 @@
+resources:
+  - id: wall-1
+    name: Test Wall 1
+  - id: wall-2
+    name: Test Wall 2
+  - id: wall-3
+    name: Test Wall 3
