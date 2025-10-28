@@ -12,10 +12,10 @@
       th{background:#fafafa;}
       .available{color:#0a7; font-weight:600;}
       .reserved{color:#b00; font-weight:600;}
+      .expired{color:#b00; font-weight:600;}
       form.inline{display:inline;}
       input[type="time"]{font:inherit; padding:.2rem .3rem;}
       button{font:inherit; padding:.3rem .6rem; border:1px solid #ccc; border-radius:6px; background:#fff; cursor:pointer;}
-      .expired{color:#b00; font-weight:600;}
     </style>
 </head>
 <body>
@@ -107,7 +107,7 @@
         var ms = dt - now;
         var nice = fmtNice(dt);
         if(ms <= 0){
-          td.innerHTML = '<span class=\"expired\">Expired</span>';
+          td.innerHTML = '<span class="expired">Expired</span>';
         } else {
           td.textContent = nice+' ('+fmtCountdown(ms)+')';
         }
@@ -139,28 +139,28 @@
         var expCell = tr.querySelector('.expires');
         var actionCell = tr.querySelector('.action');
         if(r.user){
-          statusCell.innerHTML = '<span class=\"reserved\">Reserved</span>';
+          statusCell.innerHTML = '<span class="reserved">Reserved</span>';
         } else {
-          statusCell.innerHTML = '<span class=\"available\">Available</span>';
+          statusCell.innerHTML = '<span class="available">Available</span>';
         }
         byCell.textContent = r.user || '-';
         expCell.dataset.expires = r.expires_at || '';
         if(!r.user){
-          actionCell.innerHTML = '
-            <form class=\"inline reserve-form\" method=\"post\" action=\"/reserve\">
-              <input type=\"hidden\" name=\"resource_id\" value=\"'+id+'\">
-              <label class=\"muted\" for=\"t-'+id+'\">Time (HH:MM):</label>
-              <input id=\"t-'+id+'\" type=\"time\" name=\"expires_hhmm\" step=\"60\">
-              <button type=\"submit\">Reserve</button>
-            </form>';
+          actionCell.innerHTML = `
+            <form class="inline reserve-form" method="post" action="/reserve">
+              <input type="hidden" name="resource_id" value="${id}">
+              <label class="muted" for="t-${id}">Time (HH:MM):</label>
+              <input id="t-${id}" type="time" name="expires_hhmm" step="60">
+              <button type="submit">Reserve</button>
+            </form>`;
         } else if(r.user === '{{ user }}'){
-          actionCell.innerHTML = '
-            <form class=\"inline release-form\" method=\"post\" action=\"/release\">
-              <input type=\"hidden\" name=\"resource_id\" value=\"'+id+'\">
-              <button type=\"submit\">Release</button>
-            </form>';
+          actionCell.innerHTML = `
+            <form class="inline release-form" method="post" action="/release">
+              <input type="hidden" name="resource_id" value="${id}">
+              <button type="submit">Release</button>
+            </form>`;
         } else {
-          actionCell.innerHTML = '<span class=\"muted\">Owned by '+(r.user||'')+'</span>';
+          actionCell.innerHTML = '<span class="muted">Owned by '+(r.user||'')+'</span>';
         }
       });
       tickCountdown();
