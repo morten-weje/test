@@ -46,8 +46,8 @@ def _write_state(state):
 def _iso_now():
     return datetime.now(APP_TZ)
 
-
-def _parse_hhmm(hhmm: str) -> datetime | None:
+from typing import Optional
+def _parse_hhmm(hhmm: str) -> Optional[datetime]:
     try:
         hh, mm = [int(x) for x in hhmm.split(":", 1)]
         today = _iso_now().date()
