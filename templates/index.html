@@ -138,6 +138,11 @@
         var byCell = tr.querySelector('.by');
         var expCell = tr.querySelector('.expires');
         var actionCell = tr.querySelector('.action');
+
+        // If user is interacting inside the action cell (time picker or button), don't replace it.
+        var active = document.activeElement;
+        var isEditing = active && actionCell.contains(active);
+
         if(r.user){
           statusCell.innerHTML = '<span class="reserved">Reserved</span>';
         } else {
@@ -145,22 +150,25 @@
         }
         byCell.textContent = r.user || '-';
         expCell.dataset.expires = r.expires_at || '';
-        if(!r.user){
-          actionCell.innerHTML = `
-            <form class="inline reserve-form" method="post" action="/reserve">
-              <input type="hidden" name="resource_id" value="${id}">
-              <label class="muted" for="t-${id}">Time (HH:MM):</label>
-              <input id="t-${id}" type="time" name="expires_hhmm" step="60">
-              <button type="submit">Reserve</button>
-            </form>`;
-        } else if(r.user === '{{ user }}'){
-          actionCell.innerHTML = `
-            <form class="inline release-form" method="post" action="/release">
-              <input type="hidden" name="resource_id" value="${id}">
-              <button type="submit">Release</button>
-            </form>`;
-        } else {
-          actionCell.innerHTML = '<span class="muted">Owned by '+(r.user||'')+'</span>';
+
+        if(!isEditing){
+          if(!r.user){
+            actionCell.innerHTML = `
+              <form class="inline reserve-form" method="post" action="/reserve">
+                <input type="hidden" name="resource_id" value="${id}">
+                <label class="muted" for="t-${id}">Time (HH:MM):</label>
+                <input id="t-${id}" type="time" name="expires_hhmm" step="60">
+                <button type="submit">Reserve</button>
+              </form>`;
+          } else if(r.user === '{{ user }}'){
+            actionCell.innerHTML = `
+              <form class="inline release-form" method="post" action="/release">
+                <input type="hidden" name="resource_id" value="${id}">
+                <button type="submit">Release</button>
+              </form>`;
+          } else {
+            actionCell.innerHTML = '<span class="muted">Owned by '+(r.user||'')+'</span>';
+          }
         }
       });
       tickCountdown();
