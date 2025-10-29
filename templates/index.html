@@ -116,9 +116,9 @@
       const hh = form.querySelector('.hh');
       const mm = form.querySelector('.mm');
       if(hh && mm){
-        const nq = nextQuarter();
-        if(!hh.value) hh.value = nq.h;
-        if(!mm.value) mm.value = nq.m;
+        // Default to 23:45
+        hh.value = '23';
+        mm.value = '45';  
       }
     }
 
