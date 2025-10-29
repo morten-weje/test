@@ -139,9 +139,13 @@
         var expCell = tr.querySelector('.expires');
         var actionCell = tr.querySelector('.action');
 
-        // If user is interacting inside the action cell (time picker or button), don't replace it.
         var active = document.activeElement;
         var isEditing = active && actionCell.contains(active);
+        var timeInput = actionCell.querySelector('input[type=\"time\"]');
+        var hasTyped = timeInput && timeInput.value;
+
+        var desiredMode = !r.user ? 'reserve' : (r.user === '{{ user }}' ? 'release' : 'owned');
+        var currentMode = actionCell.querySelector('form.reserve-form') ? 'reserve' : (actionCell.querySelector('form.release-form') ? 'release' : (actionCell.querySelector('.muted') ? 'owned' : 'unknown'));
 
         if(r.user){
           statusCell.innerHTML = '<span class="reserved">Reserved</span>';
@@ -151,8 +155,10 @@
         byCell.textContent = r.user || '-';
         expCell.dataset.expires = r.expires_at || '';
 
-        if(!isEditing){
-          if(!r.user){
+        // Only update the action cell if mode changes, or if user isn't typing
+        var shouldReplace = (desiredMode !== currentMode) || (!isEditing && !hasTyped);
+        if(shouldReplace){
+          if(desiredMode === 'reserve'){
             actionCell.innerHTML = `
               <form class="inline reserve-form" method="post" action="/reserve">
                 <input type="hidden" name="resource_id" value="${id}">
@@ -160,7 +166,7 @@
                 <input id="t-${id}" type="time" name="expires_hhmm" step="60">
                 <button type="submit">Reserve</button>
               </form>`;
-          } else if(r.user === '{{ user }}'){
+          } else if(desiredMode === 'release'){
             actionCell.innerHTML = `
               <form class="inline release-form" method="post" action="/release">
                 <input type="hidden" name="resource_id" value="${id}">
