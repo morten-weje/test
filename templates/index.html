@@ -16,7 +16,7 @@
       .mine{background: #fff7e6;}
       .me-badge{display:inline-block; margin-left:.4rem; padding:.1rem .35rem; border-radius:6px; font-size:.75rem; background:#0a7; color:#fff;}
       form.inline{display:inline;}
-      input[type="time"]{font:inherit; padding:.2rem .3rem;}
+      select{font:inherit; padding:.2rem .3rem;}
       button{font:inherit; padding:.3rem .6rem; border:1px solid #ccc; border-radius:6px; background:#fff; cursor:pointer;}
     </style>
 </head>
@@ -55,10 +55,16 @@
         <td class="expires" data-expires="{{ r.expires_at or '' }}">{{ r.expires_at or '-' }}</td>
         <td class="action">
           {% if not r.reserved_by %}
-            <form class="inline reserve-form" method="post" action="/reserve">
+            <form class="inline reserve-form" method="post" action="/reserve" onsubmit="return buildTimeAndSubmit(this)">
               <input type="hidden" name="resource_id" value="{{ r.id }}">
-              <label class="muted" for="t-{{ r.id }}">Time (HH:MM):</label>
-              <input id="t-{{ r.id }}" type="time" name="expires_hhmm" step="900">
+              <label class="muted" for="h-{{ r.id }}">Time:</label>
+              <select id="h-{{ r.id }}" class="hh">
+                {% for H in range(0,24) %}<option value="{{ '%02d' % H }}">{{ '%02d' % H }}</option>{% endfor %}
+              </select> :
+              <select class="mm">
+                <option value="00">00</option><option value="15">15</option><option value="30">30</option><option value="45">45</option>
+              </select>
+              <input type="hidden" name="expires_hhmm" value="">
               <button type="submit">Reserve</button>
             </form>
           {% elif r.reserved_by == user %}
@@ -98,6 +104,30 @@
       return 'in '+parts.join(' ');
     }
     function parseISO(s){ return s ? new Date(s) : null; }
+
+    function nextQuarter(){
+      const now = new Date();
+      const total = now.getHours()*60 + now.getMinutes();
+      const next = Math.ceil(total/15)*15;
+      return { h: pad(Math.floor((next/60)%24)), m: pad(next%60) };
+    }
+
+    function initReserveForm(form){
+      const hh = form.querySelector('.hh');
+      const mm = form.querySelector('.mm');
+      if(hh && mm){
+        const nq = nextQuarter();
+        if(!hh.value) hh.value = nq.h;
+        if(!mm.value) mm.value = nq.m;
+      }
+    }
+
+    function buildTimeAndSubmit(form){
+      const hh = form.querySelector('.hh').value;
+      const mm = form.querySelector('.mm').value;
+      form.querySelector('input[name=\"expires_hhmm\"]').value = hh+':'+mm;
+      return true;
+    }
 
     function tickCountdown(){
       document.querySelectorAll('td.expires').forEach(function(td){
@@ -143,8 +173,9 @@
 
         var active = document.activeElement;
         var isEditing = active && actionCell.contains(active);
-        var timeInput = actionCell.querySelector('input[type=\"time\"]');
-        var hasTyped = timeInput && timeInput.value;
+        var hhSel = actionCell.querySelector('select.hh');
+        var mmSel = actionCell.querySelector('select.mm');
+        var hasTyped = (hhSel && mmSel && (hhSel.value || mmSel.value));
 
         var desiredMode = !r.user ? 'reserve' : (r.user === '{{ user }}' ? 'release' : 'owned');
         var currentMode = actionCell.querySelector('form.reserve-form') ? 'reserve' : (
@@ -153,7 +184,7 @@
           )
         );
 
-        // status + me badge
+        // status + me badge + row highlight
         if(r.user){
           statusCell.innerHTML = '<span class="reserved">Reserved</span>' + (r.user === '{{ user }}' ? '<span class="me-badge">me</span>' : '');
           tr.classList.toggle('mine', r.user === '{{ user }}');
@@ -169,12 +200,20 @@
         if(shouldReplace){
           if(desiredMode === 'reserve'){
             actionCell.innerHTML = `
-              <form class="inline reserve-form" method="post" action="/reserve">
+              <form class="inline reserve-form" method="post" action="/reserve" onsubmit="return buildTimeAndSubmit(this)">
                 <input type="hidden" name="resource_id" value="${id}">
-                <label class="muted" for="t-${id}">Time (HH:MM):</label>
-                <input id="t-${id}" type="time" name="expires_hhmm" step="900">
+                <label class="muted" for="h-${id}">Time:</label>
+                <select id="h-${id}" class="hh">
+                  ${Array.from({length:24}, (_,H)=>('<option value=\"'+pad(H)+'\">'+pad(H)+'</option>')).join('')}
+                </select> :
+                <select class="mm">
+                  <option value="00">00</option><option value="15">15</option><option value="30">30</option><option value="45">45</option>
+                </select>
+                <input type="hidden" name="expires_hhmm" value="">
                 <button type="submit">Reserve</button>
               </form>`;
+            var form = actionCell.querySelector('form.reserve-form');
+            initReserveForm(form);
           } else if(desiredMode === 'release'){
             actionCell.innerHTML = `
               <form class="inline release-form" method="post" action="/release">
@@ -188,6 +227,9 @@
       });
       tickCountdown();
     }
+
+    // Initialize server-rendered reserve forms to next quarter
+    document.querySelectorAll('form.reserve-form').forEach(initReserveForm);
   </script>
 </body>
 </html>
