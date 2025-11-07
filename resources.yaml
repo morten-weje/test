@@ -7,3 +7,5 @@ resources:
     name: Test Wall 3
   - id: wall-4
     name: Test Wall 4
+  - id: wall-5
+    name: Test Wall 5
