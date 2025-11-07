@@ -9,3 +9,5 @@ resources:
     name: Test Wall 4
   - id: wall-5
     name: Test Wall 5
+  - id: wall-6
+    name: Test Wall 6
