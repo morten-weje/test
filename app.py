@@ -13,7 +13,7 @@ APP_TZ = ZoneInfo(os.environ.get("APP_TZ", "Europe/Copenhagen"))
 BASE_DIR = os.path.dirname(__file__)
 USERS_FILE = os.path.join(BASE_DIR, "users.yaml")
 RESOURCES_FILE = os.path.join(BASE_DIR, "resources.yaml")
-STATE_FILE = os.path.join(BASE_DIR, "state.yaml")
+STATE_FILE = os.getenv("STATE_FILE", os.path.join(BASE_DIR, "state.yaml"))
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "change-me-please")
